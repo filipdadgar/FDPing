@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FDPing")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+40939fcba13a7b777c0a8cb8903b896afb5195fe")]
 [assembly: System.Reflection.AssemblyProductAttribute("FDPing")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FDPing")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

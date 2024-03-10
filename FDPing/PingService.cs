@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -13,6 +14,7 @@ namespace FDPing;
 
 public class PingService : BackgroundService
 {
+    private readonly ILogger<PingService> _logger;
     private readonly IConfiguration _configuration;
     private readonly TracerProvider _tracerProvider;
     private readonly MeterProvider _meterProvider;
@@ -23,9 +25,10 @@ public class PingService : BackgroundService
     private readonly Dictionary<string, (Counter<long>, Counter<long>)> _hostCounters;
 
 
-    public PingService(IConfiguration configuration)
+    public PingService(IConfiguration configuration, ILogger<PingService> logger)
     {
         _configuration = configuration;
+        _logger = logger;
         _hostCounters = new Dictionary<string, (Counter<long>, Counter<long>)>();
 
         _meterProvider = Sdk.CreateMeterProviderBuilder()
@@ -45,15 +48,15 @@ public class PingService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 {
-    Console.WriteLine("PingService is starting.");
-    Console.WriteLine($"PrometheusExporter exposes metrics via: " +
-                      $"{new Uri("http://localhost:9464/metrics")}");
+    _logger.LogInformation("PingService is starting.");
+    _logger.LogInformation($"PrometheusExporter exposes metrics via: " +
+                           $"{new Uri("http://localhost:9464/metrics")}");
 
     var hosts = _configuration.GetSection("Hosts").Get<string[]>();
     var tracer = _tracerProvider.GetTracer("PingService");
 
     // Debugging
-    Console.WriteLine($"Hosts: {string.Join(", ", hosts)}");
+    _logger.LogInformation($"Hosts: {string.Join(", ", hosts)}");
 
     if (hosts == null)
     {
@@ -88,8 +91,8 @@ public class PingService : BackgroundService
                     _successCount.Add(1);
                     // Increment the counter for successful pings for this host
                     _hostCounters[host].Item1.Add(1);
-                    Console.WriteLine("Ping to " + host + " successful." +
-                                      " Round Trip Time: " + reply.RoundtripTime + "ms ");
+                    _logger.LogInformation("Ping to " + host + " successful." +
+                                           " Round Trip Time: " + reply.RoundtripTime + "ms ");
                 }
                 else
                 {
@@ -97,7 +100,7 @@ public class PingService : BackgroundService
                     _failureCount.Add(1);
                     // Increment the counter for failed pings for this host
                     _hostCounters[host].Item2.Add(1);
-                    Console.WriteLine("Ping to " + host + " failed.");
+                    _logger.LogInformation("Ping to " + host + " failed.");
                 }
             }
             catch (Exception ex)
@@ -111,7 +114,7 @@ public class PingService : BackgroundService
                         FailureMeter.CreateCounter<long>($"{host}_failure_count"));
                 }
                 _hostCounters[host].Item2.Add(1);
-                Console.WriteLine($"Ping to {host} failed with exception: {ex.Message}");
+                _logger.LogInformation($"Ping to {host} failed with exception: {ex.Message}");
             }
         }
 

@@ -23,3 +23,9 @@
 /Users/filipdadgar/RiderProjects/FDPing/FDPing/obj/Debug/net8.0/ref/FDPing.dll
 /Users/filipdadgar/RiderProjects/FDPing/FDPing/bin/Debug/net8.0/OpenTelemetry.Extensions.Hosting.dll
 /Users/filipdadgar/RiderProjects/FDPing/FDPing/bin/Debug/net8.0/OpenTelemetry.Exporter.Prometheus.HttpListener.dll
+/Users/filipdadgar/RiderProjects/FDPing/FDPing/bin/Debug/net8.0/Google.Protobuf.dll
+/Users/filipdadgar/RiderProjects/FDPing/FDPing/bin/Debug/net8.0/Grpc.Core.Api.dll
+/Users/filipdadgar/RiderProjects/FDPing/FDPing/bin/Debug/net8.0/Grpc.Net.Client.dll
+/Users/filipdadgar/RiderProjects/FDPing/FDPing/bin/Debug/net8.0/Grpc.Net.Common.dll
+/Users/filipdadgar/RiderProjects/FDPing/FDPing/bin/Debug/net8.0/OpenTelemetry.Exporter.OpenTelemetryProtocol.dll
+/Users/filipdadgar/RiderProjects/FDPing/FDPing/obj/Debug/net8.0/FDPing.sourcelink.json

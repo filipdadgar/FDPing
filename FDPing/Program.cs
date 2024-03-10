@@ -2,11 +2,13 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Exporter.Prometheus;
+using OpenTelemetry.Logs;
 
 namespace FDPing
 {
@@ -26,9 +28,10 @@ namespace FDPing
                             .AddConsoleExporter()
                         )
                         .WithTracing(builder => builder
-                                .AddConsoleExporter()
-                            );
+                            .AddConsoleExporter()
+                        );
                 })
+                
                 
                 .Build()
                 .Run();

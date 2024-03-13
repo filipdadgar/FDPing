@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -23,34 +24,55 @@ public class PingService : BackgroundService
     private static readonly Counter<long> _successCount = SuccessMeter.CreateCounter<long>("success_count");
     private static readonly Counter<long> _failureCount = FailureMeter.CreateCounter<long>("failure_count");
     private readonly Dictionary<string, (Counter<long>, Counter<long>)> _hostCounters;
+    private readonly Dictionary<string, Histogram<long>> _hostHistograms;
+    
 
-
-    public PingService(IConfiguration configuration, ILogger<PingService> logger)
+    public PingService(IConfiguration configuration, ILogger<PingService> logger, IMeterFactory meterFactory)
     {
+        var meter = meterFactory.Create(new MeterOptions("ping.success")); // Tobbe sa!
         _configuration = configuration;
         _logger = logger;
         _hostCounters = new Dictionary<string, (Counter<long>, Counter<long>)>();
+        _hostHistograms = new Dictionary<string, Histogram<long>>();
 
+        
         _meterProvider = Sdk.CreateMeterProviderBuilder()
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("PingService"))
             .AddMeter("ping.success")
             .AddMeter("ping.failure")
             .AddPrometheusHttpListener(
                 options => options.UriPrefixes = new string[] { "http://localhost:9464/" })
+            // Add the Prometheus exporter
+            .AddPrometheusExporter()
+            .AddOtlpExporter(opt =>
+            {
+                opt.Protocol = OtlpExportProtocol.Grpc;
+                // Get the endpoint from the configuration
+                var endpoint = _configuration.GetSection("otlp:Endpoint").Value;
+                opt.Endpoint = new Uri(endpoint);
+                
+            })
             .Build();
         
         _tracerProvider = Sdk.CreateTracerProviderBuilder()
             .AddSource("PingService")
             .AddProcessor(new CustomConsoleProcessor())
-            .AddConsoleExporter()
+            //.AddConsoleExporter()
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("PingService"))
+            .AddOtlpExporter(opt =>
+            {
+                opt.Protocol = OtlpExportProtocol.Grpc;
+                // Get the endpoint from the configuration
+                var endpoint = _configuration.GetSection("otlp:Endpoint").Value;
+                opt.Endpoint = new Uri(endpoint);
+                
+            })
             .Build();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 {
     _logger.LogInformation("PingService is starting.");
-    _logger.LogInformation($"PrometheusExporter exposes metrics via: " +
-                           $"{new Uri("http://localhost:9464/metrics")}");
 
     var hosts = _configuration.GetSection("Hosts").Get<string[]>();
     var tracer = _tracerProvider.GetTracer("PingService");
@@ -81,6 +103,8 @@ public class PingService : BackgroundService
                 {
                     _hostCounters[host] = (SuccessMeter.CreateCounter<long>($"{host}_success_count"),
                         FailureMeter.CreateCounter<long>($"{host}_failure_count"));
+                    _hostHistograms[host] = SuccessMeter.CreateHistogram<long>($"{host}_roundtrip_time");
+
                 }
 
                 if (reply.Status == IPStatus.Success)
@@ -88,11 +112,14 @@ public class PingService : BackgroundService
                     activity?.SetAttribute("status", "success");
                     activity?.SetAttribute("roundtripTime", reply.RoundtripTime);
                     // Increment the counter for successful pings
-                    _successCount.Add(1);
+                    _successCount.Add(1 );
                     // Increment the counter for successful pings for this host
                     _hostCounters[host].Item1.Add(1);
                     _logger.LogInformation("Ping to " + host + " successful." +
                                            " Round Trip Time: " + reply.RoundtripTime + "ms ");
+                    _hostHistograms[host].Record(reply.RoundtripTime);
+
+
                 }
                 else
                 {
@@ -115,6 +142,8 @@ public class PingService : BackgroundService
                 }
                 _hostCounters[host].Item2.Add(1);
                 _logger.LogInformation($"Ping to {host} failed with exception: {ex.Message}");
+                _logger.LogInformation("Metric exported: {host}_failure_count", host); // New log message
+
             }
         }
 

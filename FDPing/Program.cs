@@ -9,6 +9,7 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Exporter.Prometheus;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Exporter.OpenTelemetryProtocol;
 
 namespace FDPing
 {
@@ -17,19 +18,21 @@ namespace FDPing
         static void Main(string[] args)
         {
             Host.CreateDefaultBuilder(args)
-                .ConfigureServices((hostContext, services) =>
+                .ConfigureServices((services) =>
                 {
                     services.AddHostedService<PingService>();
                     // Configure OpenTelemetry
-                    services.AddOpenTelemetry()
-                        .WithMetrics(builder => builder
-                            .AddPrometheusExporter()
-                            .AddPrometheusHttpListener()
-                            .AddConsoleExporter()
-                        )
-                        .WithTracing(builder => builder
-                            .AddConsoleExporter()
-                        );
+                    // services.AddOpenTelemetry()
+                    //     .WithMetrics(builder => builder
+                    //         .AddPrometheusExporter()
+                    //         .AddPrometheusHttpListener()
+                    //         .AddConsoleExporter()
+                    //         .AddOtlpExporter()
+                    //     )
+                    //     .WithTracing(builder => builder
+                    //         .AddConsoleExporter()
+                    //         .AddOtlpExporter()
+                    //     );
                 })
                 
                 

@@ -25,7 +25,7 @@ public class PingService : BackgroundService
     private static string _serviceName = "PingService";
     private static readonly Meter _successCount = new ("ping.success");
     private static readonly Meter _failureCount = new ("ping.failure");
-    private static readonly Meter _roundTripTime = new ("ping.roundtripTime");
+   // private static readonly Meter _roundTripTime = new ("ping.roundtripTime");
 
     public PingService(IConfiguration configuration, ILogger<PingService> logger)
     {
@@ -37,7 +37,6 @@ public class PingService : BackgroundService
             .AddMeter(_failureCount.Name)
             .AddView(instrumentName: "RoundTripTime", new ExplicitBucketHistogramConfiguration())
             .AddPrometheusHttpListener()
-            // Add the Prometheus exporter
             .AddPrometheusExporter()
             .AddOtlpExporter(opt =>
             {
@@ -46,7 +45,6 @@ public class PingService : BackgroundService
                 var endpoint = _configuration.GetSection("otlp:Endpoint").Value;
                 opt.Endpoint = new Uri(endpoint);
             })
-            //.AddConsoleExporter()
             .Build();
     }
 

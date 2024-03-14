@@ -21,7 +21,7 @@ namespace FDPing
                 .ConfigureServices((services) =>
                 {
                     services.AddHostedService<PingService>();
-                    // Configure OpenTelemetry
+                    // // Configure OpenTelemetry
                     // services.AddOpenTelemetry()
                     //     .WithMetrics(builder => builder
                     //         .AddPrometheusExporter()
